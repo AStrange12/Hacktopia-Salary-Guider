@@ -1,10 +1,14 @@
 "use server";
 
-import { auth } from "@/lib/firebase/server-config";
-import { db } from "@/lib/firebase/server-config";
+import { getApp } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
+import { getFirestore } from "firebase-admin/firestore";
 import { UserProfile, Expense, SavingsGoal } from "@/lib/types";
 import { collection, doc, getDoc, getDocs, setDoc, addDoc, serverTimestamp } from "firebase/firestore";
 import { revalidatePath } from "next/cache";
+
+const db = getFirestore(getApp());
+const auth = getAuth(getApp());
 
 export async function getUser(): Promise<UserProfile | null> {
   try {

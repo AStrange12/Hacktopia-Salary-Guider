@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth } from '@/lib/firebase/config';
+import { useAuth } from '@/firebase';
 import { Button } from '@/components/ui/button';
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast";
 
 const GoogleIcon = () => (
   <svg className="mr-2 h-4 w-4" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
@@ -17,6 +17,7 @@ export function LoginForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const auth = useAuth();
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
