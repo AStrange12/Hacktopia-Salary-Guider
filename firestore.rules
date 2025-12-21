@@ -1,0 +1,147 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict user-ownership model where all data
+ * is private and accessible only to the authenticated user who created it. It prioritizes
+ * strong authorization while allowing flexibility in the data's shape for rapid development.
+ *
+ * Data Structure: All application data is nested hierarchically under the `/users/{userId}`
+ * path, where `{userId}` is the Firebase Authentication UID of the user. This structure
+ * creates a secure, private data silo for each user, simplifying access control.
+ *
+ * Key Security Decisions:
+ * - User Enumeration is Disabled: Listing documents from the top-level `/users`
+ *   collection is explicitly forbidden to protect user privacy.
+ * - Path-Based Ownership: A user's identity, derived from `request.auth.uid`, is used
+ *   to grant access based on the document path (e.g., `/users/{auth.uid}/...`). This is
+ *   the sole mechanism for authorizing access to private data.
+ * - Relational Integrity: On document creation, rules verify that the document's
+ *   internal `userId` or `id` field correctly matches the `userId` in its path,
+ *   ensuring data consistency. These relational fields are immutable once set.
+ *
+ * Denormalization for Authorization: The data model is inherently designed for efficient
+ * security rules. All user-specific documents are nested under a user's unique path,
+ * eliminating the need for slow, costly `get()` or `exists()` calls to other documents
+ * to verify ownership.
+ *
+ * Structural Segregation: The design uses a dedicated `/users/{userId}` tree for all
+ * private user data (profiles, expenses, goals). This clean separation ensures that
+ * security rules for private data do not conflict with any potential future collections
+ * for public or administrative data.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ------------------------------------------------------------------------
+    // Helper Functions
+    // ------------------------------------------------------------------------
+
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Verifies that the requesting user's UID matches the userId from the path.
+     * This is the primary function for enforcing data ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Verifies ownership for an existing document. Used for update and delete
+     * operations to ensure the document exists before the operation is allowed.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * On create, validates that the UserProfile document's internal 'id' field
+     * matches the user's UID from the document path.
+     */
+    function hasValidUserProfileDataOnCreate(userId) {
+      return request.resource.data.id == userId;
+    }
+
+    /**
+     * On update, ensures the UserProfile's 'id' field cannot be changed.
+     */
+    function isUserProfileDataImmutable() {
+      return request.resource.data.id == resource.data.id;
+    }
+
+    /**
+     * On create, validates that a subcollection document's internal 'userId' field
+     * matches the user's UID from the document path.
+     */
+    function hasValidUserSubcollectionDataOnCreate(userId) {
+      return request.resource.data.userId == userId;
+    }
+
+    /**
+     * On update, ensures a subcollection document's relational keys ('userId' and 'id')
+     * cannot be changed.
+     */
+    function isUserSubcollectionDataImmutable() {
+      return request.resource.data.userId == resource.data.userId && request.resource.data.id == resource.data.id;
+    }
+
+    // ------------------------------------------------------------------------
+    // Collection Rules
+    // ------------------------------------------------------------------------
+
+    /**
+     * @description Manages user profile documents. Only the owner can manage their profile.
+     * @path /users/{userId}
+     * @allow (create) An authenticated user creating their own profile: `auth.uid == 'user_abc'` attempts to create `/users/user_abc`.
+     * @allow (get) An authenticated user reading their own profile: `auth.uid == 'user_abc'` attempts to read `/users/user_abc`.
+     * @deny (list) Any user attempting to list all documents in the `/users` collection.
+     * @deny (update) An authenticated user attempting to update another user's profile: `auth.uid == 'user_abc'` attempts to update `/users/user_xyz`.
+     * @principle Restricts access to a user's own data tree and prevents user enumeration.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && hasValidUserProfileDataOnCreate(userId);
+      allow update: if isExistingOwner(userId) && isUserProfileDataImmutable();
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Manages a user's private expense records.
+       * @path /users/{userId}/expenses/{expenseId}
+       * @allow (create) An authenticated user adding a new expense to their own account: `auth.uid == 'user_abc'` creates a document in `/users/user_abc/expenses`.
+       * @allow (list) An authenticated user listing their own expenses: `auth.uid == 'user_abc'` lists from `/users/user_abc/expenses`.
+       * @deny (get) An authenticated user reading another user's expense: `auth.uid == 'user_abc'` attempts to read a document in `/users/user_xyz/expenses`.
+       * @deny (delete) An authenticated user deleting another user's expense: `auth.uid == 'user_abc'` attempts to delete a document in `/users/user_xyz/expenses`.
+       * @principle Enforces document ownership for all operations within a user's private subcollection.
+       */
+      match /expenses/{expenseId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && hasValidUserSubcollectionDataOnCreate(userId);
+        allow update: if isExistingOwner(userId) && isUserSubcollectionDataImmutable();
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Manages a user's private savings goals.
+       * @path /users/{userId}/savingsGoals/{savingsGoalId}
+       * @allow (create) An authenticated user adding a new savings goal: `auth.uid == 'user_abc'` creates a document in `/users/user_abc/savingsGoals`.
+       * @allow (list) An authenticated user listing their own savings goals: `auth.uid == 'user_abc'` lists from `/users/user_abc/savingsGoals`.
+       * @deny (get) An authenticated user reading another user's savings goal: `auth.uid == 'user_abc'` attempts to read a document in `/users/user_xyz/savingsGoals`.
+       * @deny (update) An authenticated user updating another user's savings goal: `auth.uid == 'user_abc'` attempts to update a document in `/users/user_xyz/savingsGoals`.
+       * @principle Enforces document ownership for all operations within a user's private subcollection.
+       */
+      match /savingsGoals/{savingsGoalId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && hasValidUserSubcollectionDataOnCreate(userId);
+        allow update: if isExistingOwner(userId) && isUserSubcollectionDataImmutable();
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+  }
+}

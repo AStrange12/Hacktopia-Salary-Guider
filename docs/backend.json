@@ -1,0 +1,189 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user's profile, storing basic information and preferences.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "salary": {
+          "type": "number",
+          "description": "User's annual salary."
+        },
+        "taxRegime": {
+          "type": "string",
+          "description": "User's preferred tax regime (e.g., old or new)."
+        },
+        "needsPercentage": {
+          "type": "number",
+          "description": "Percentage of income allocated to needs, based on the 50-30-20 rule."
+        },
+        "wantsPercentage": {
+          "type": "number",
+          "description": "Percentage of income allocated to wants, based on the 50-30-20 rule."
+        },
+        "savingsPercentage": {
+          "type": "number",
+          "description": "Percentage of income allocated to savings, based on the 50-30-20 rule."
+        }
+      },
+      "required": [
+        "id",
+        "email"
+      ]
+    },
+    "Expense": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Expense",
+      "type": "object",
+      "description": "Represents a single expense record.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Expense entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Expense)"
+        },
+        "category": {
+          "type": "string",
+          "description": "Category of the expense (e.g., food, transportation)."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Amount of the expense."
+        },
+        "date": {
+          "type": "string",
+          "description": "Date of the expense.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "category",
+        "amount",
+        "date"
+      ]
+    },
+    "SavingsGoal": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SavingsGoal",
+      "type": "object",
+      "description": "Represents a user's savings goal.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the SavingsGoal entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N SavingsGoal)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the savings goal (e.g., down payment, vacation)."
+        },
+        "targetAmount": {
+          "type": "number",
+          "description": "Target amount to save."
+        },
+        "currentAmount": {
+          "type": "number",
+          "description": "Current amount saved towards the goal."
+        },
+        "deadline": {
+          "type": "string",
+          "description": "Deadline for achieving the savings goal.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "name",
+        "targetAmount",
+        "currentAmount",
+        "deadline"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profile information. The 'userId' parameter is the user's Firebase Auth UID, ensuring path-based ownership. This collection stores personal data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Auth UID of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/expenses/{expenseId}",
+        "definition": {
+          "entityName": "Expense",
+          "schema": {
+            "$ref": "#/backend/entities/Expense"
+          },
+          "description": "Stores expense records for a specific user. 'userId' ensures that an expense belongs to the user, ensuring path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Auth UID of the user who owns the expense."
+            },
+            {
+              "name": "expenseId",
+              "description": "The unique identifier for the expense."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/savingsGoals/{savingsGoalId}",
+        "definition": {
+          "entityName": "SavingsGoal",
+          "schema": {
+            "$ref": "#/backend/entities/SavingsGoal"
+          },
+          "description": "Stores savings goals for a specific user. 'userId' ensures that a savings goal belongs to the user, ensuring path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Auth UID of the user who owns the savings goal."
+            },
+            {
+              "name": "savingsGoalId",
+              "description": "The unique identifier for the savings goal."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to ensure security, scalability, and ease of debugging, adhering to the core design principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). It leverages structural segregation and access modeling for enhanced security.\n\n**Authorization Independence:**\nTo avoid hierarchical authorization dependencies, the design denormalizes authorization context. For example, while `Expense` and `SavingsGoal` have a `userId` field referencing the `UserProfile`, no Firestore rules will ever use `get()` to read the `UserProfile` document to validate the `userId`. Instead, ownership is verified purely based on the path `/users/{userId}/expenses/{expenseId}`. This prevents the need for complex `get()` calls in the security rules, thus enabling atomic operations and easier debugging.\n\n**Structural Segregation:**\nThe database structure maintains all documents in a collection to share the same security requirements. User-specific data (profiles, expenses, savings goals) are stored under the `/users/{userId}` path, ensuring that only the authenticated user has access to their data. This segregation simplifies the security rules, making them easier to understand and maintain. The structure avoids mixing data with different access needs within the same collection.\n\n**Access Modeling:**\nThe design uses path-based ownership for private user data. The `/users/{userId}/expenses/{expenseId}` and `/users/{userId}/savingsGoals/{savingsGoalId}` paths clearly define the user's ownership of their expenses and savings goals, respectively. This is a direct 1:N relationship. The structure is simple and secure, making ownership-based security rules efficient. This eliminates the need for membership maps because the `userId` comes directly from `request.auth.uid`.\n\n**QAPs (Rules are not Filters):**\nThe data structure supports secure `list` operations. Because each user's data is segregated under their respective `userId`, listing expenses or savings goals under `/users/{userId}/expenses` or `/users/{userId}/savingsGoals` only returns the data owned by that user. Thus, preventing the need to filter data on the client-side and avoiding potential security vulnerabilities.\n\n**Example Scenario: Reading Expenses**\nAn authenticated user can read expenses stored in `/users/{userId}/expenses/{expenseId}` where `userId` matches their `uid`. The security rule will simply verify if `request.auth.uid == userId` for read operations, without needing to fetch any parent document or check additional conditions."
+  }
+}
