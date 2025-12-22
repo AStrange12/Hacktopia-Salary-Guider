@@ -73,11 +73,7 @@ export default function SpendingSplitCard({ needs, wants, savings, income }: Spe
               <PieChart>
                 <Tooltip
                   cursor={false}
-                  content={
-                    <ChartContainer config={chartConfig}>
-                      <ChartTooltipContent hideLabel />
-                    </ChartContainer>
-                  }
+                  content={<ChartTooltipContent hideLabel />}
                 />
                 <Pie
                   data={chartData}
