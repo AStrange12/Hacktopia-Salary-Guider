@@ -21,6 +21,7 @@ import { analyzeSpendingBehavior, summarizeMonthlySpending } from '@/ai/flows';
 import MonthEndRiskCard from '@/components/dashboard/month-end-risk-card';
 import type { UserProfile, Expense, SavingsGoal } from '@/lib/types';
 import type { SummarizeMonthlySpendingOutput } from '@/ai/flows/summarize-monthly-spending';
+import type { AnalyzeSpendingBehaviorOutput } from '@/ai/flows/analyze-spending-behavior';
 
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
@@ -28,7 +29,7 @@ export default function DashboardPage() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([]);
-  const [spendingAnalysis, setSpendingAnalysis] = useState<{ financialHealthScore: number } | null>(null);
+  const [spendingAnalysis, setSpendingAnalysis] = useState<AnalyzeSpendingBehaviorOutput | null>(null);
   const [spendingSummary, setSpendingSummary] = useState<SummarizeMonthlySpendingOutput | null>(null);
   const [loading, setLoading] = useState(true);
 
