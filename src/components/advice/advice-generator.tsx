@@ -50,7 +50,7 @@ export default function AdviceGenerator({ userProfile, spendingAnalysis }: Advic
     setAdvice(null);
     try {
        const adviceInput: PersonalizedAdviceInput = {
-        spendingAnalysis: spendingAnalysis.summary,
+        spendingAnalysis: JSON.stringify(spendingAnalysis),
         financialGoals: values.financialGoals,
         taxRegime: userProfile.taxRegime || 'new',
         salary: userProfile.salary || 0,
