@@ -6,7 +6,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   onAuthStateChanged,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
 } from "firebase/auth";
 import { useForm } from "react-hook-form";
@@ -43,15 +44,21 @@ export function LoginForm({ isRegister = false }: LoginFormProps) {
     },
   });
 
+
   useEffect(() => {
     if (!auth) return;
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        router.push("/dashboard");
-      }
-    });
-    return () => unsubscribe();
+  
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) {
+          router.push("/dashboard");
+        }
+      })
+      .catch((error) => {
+        console.error("Redirect error:", error);
+      });
   }, [auth, router]);
+  
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
@@ -77,18 +84,18 @@ export function LoginForm({ isRegister = false }: LoginFormProps) {
     setGoogleLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      await signInWithRedirect(auth, provider);
     } catch (error: any) {
-      console.error("Google Sign-In Error:", error);
       toast({
         variant: "destructive",
         title: "Google Sign-In Failed",
-        description: error.message || "Could not sign in with Google. Please try again.",
+        description: error.message,
       });
     } finally {
       setGoogleLoading(false);
     }
   };
+  
 
   return (
     <div className="grid gap-6">
