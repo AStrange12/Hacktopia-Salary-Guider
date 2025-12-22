@@ -4,13 +4,14 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { suggestPersonalizedAdvice } from '@/ai/flows/suggest-personalized-advice';
+import { suggestPersonalizedAdvice, PersonalizedAdviceInput } from '@/ai/flows/suggest-personalized-advice';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import type { UserProfile } from '@/lib/types';
 import { Lightbulb, Sparkles } from 'lucide-react';
+import type { AnalyzeSpendingBehaviorOutput } from '@/ai/flows/analyze-spending-behavior';
 
 const adviceSchema = z.object({
   financialGoals: z.string().min(10, {
@@ -20,10 +21,10 @@ const adviceSchema = z.object({
 
 interface AdviceGeneratorProps {
   userProfile: UserProfile;
-  spendingAnalysisSummary: string;
+  spendingAnalysis: AnalyzeSpendingBehaviorOutput | null;
 }
 
-export default function AdviceGenerator({ userProfile, spendingAnalysisSummary }: AdviceGeneratorProps) {
+export default function AdviceGenerator({ userProfile, spendingAnalysis }: AdviceGeneratorProps) {
   const [advice, setAdvice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -36,15 +37,25 @@ export default function AdviceGenerator({ userProfile, spendingAnalysisSummary }
   });
 
   async function onSubmit(values: z.infer<typeof adviceSchema>) {
+    if (!spendingAnalysis) {
+      toast({
+        variant: "destructive",
+        title: "Analysis Data Missing",
+        description: "Not enough spending data to generate advice.",
+      });
+      return;
+    }
+
     setIsLoading(true);
     setAdvice(null);
     try {
-      const result = await suggestPersonalizedAdvice({
-        spendingAnalysis: spendingAnalysisSummary,
+       const adviceInput: PersonalizedAdviceInput = {
+        spendingAnalysis: spendingAnalysis.summary,
         financialGoals: values.financialGoals,
         taxRegime: userProfile.taxRegime || 'new',
         salary: userProfile.salary || 0,
-      });
+      };
+      const result = await suggestPersonalizedAdvice(adviceInput);
       setAdvice(result.advice);
     } catch (error) {
       console.error("Error generating advice:", error);
@@ -80,7 +91,7 @@ export default function AdviceGenerator({ userProfile, spendingAnalysisSummary }
               </FormItem>
             )}
           />
-          <Button type="submit" disabled={isLoading}>
+          <Button type="submit" disabled={isLoading || !spendingAnalysis}>
             {isLoading ? "Generating..." : <><Sparkles className="mr-2 h-4 w-4" /> Get Advice</>}
           </Button>
         </form>

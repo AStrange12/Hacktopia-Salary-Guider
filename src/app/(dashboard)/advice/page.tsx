@@ -1,19 +1,20 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { getExpenses, getUser } from '@/app/actions';
 import { analyzeSpendingBehavior } from '@/ai/flows/analyze-spending-behavior';
 import AdviceGenerator from '@/components/advice/advice-generator';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Expense, UserProfile } from '@/lib/types';
+import type { AnalyzeSpendingBehaviorOutput } from '@/ai/flows/analyze-spending-behavior';
 
 export default function AdvicePage() {
     const { user, isUserLoading } = useUser();
     const router = useRouter();
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-    const [spendingAnalysisSummary, setSpendingAnalysisSummary] = useState<string>('No spending data available.');
+    const [spendingAnalysis, setSpendingAnalysis] = useState<AnalyzeSpendingBehaviorOutput | null>(null);
 
     useEffect(() => {
         if (!isUserLoading && !user) {
@@ -35,7 +36,7 @@ export default function AdvicePage() {
                     }).catch(() => null);
 
                     if (spendingAnalysisResult) {
-                        setSpendingAnalysisSummary(spendingAnalysisResult.summary);
+                        setSpendingAnalysis(spendingAnalysisResult);
                     }
                 }
             }
@@ -66,7 +67,7 @@ export default function AdvicePage() {
                 <CardContent>
                     <AdviceGenerator
                         userProfile={userProfile}
-                        spendingAnalysisSummary={spendingAnalysisSummary}
+                        spendingAnalysis={spendingAnalysis}
                     />
                 </CardContent>
             </Card>
