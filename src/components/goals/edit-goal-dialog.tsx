@@ -70,7 +70,7 @@ export default function EditGoalDialog({ goal, isOpen, onClose, onGoalUpdated }:
         description: error.message || "Failed to update goal.",
       });
     } finally {
-      setIsSubmitting(false);
+        setIsSubmitting(false);
     }
   };
 
