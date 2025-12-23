@@ -89,12 +89,8 @@ export default function DashboardPage() {
   }, [user, firestore]);
 
   useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/login');
-    }
-  }, [isUserLoading, user, router]);
-
-  useEffect(() => {
+    // This effect now correctly depends only on `fetchData`, which itself
+    // depends on `user` and `firestore`. It will run once when the user is available.
     fetchData();
   }, [fetchData]);
 
@@ -177,5 +173,3 @@ export default function DashboardPage() {
     </main>
   );
 }
-
-    

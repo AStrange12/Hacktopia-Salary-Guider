@@ -42,7 +42,7 @@ export function LoginForm({ isRegister = false }: LoginFormProps) {
     },
   });
 
-  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = (values: z.infer<typeof formSchema>) => {
     if (!auth) return;
     setLoading(true);
 
@@ -50,41 +50,49 @@ export function LoginForm({ isRegister = false }: LoginFormProps) {
       ? createUserWithEmailAndPassword(auth, values.email, values.password)
       : signInWithEmailAndPassword(auth, values.email, values.password);
 
-    try {
-      const userCredential = await authPromise;
-      if (userCredential.user) {
-        router.push("/dashboard");
-      }
-    } catch (error: any) {
-      console.error("Authentication Error:", error);
-      toast({
-        variant: "destructive",
-        title: "Authentication Failed",
-        description: error.message || "An unexpected error occurred. Please try again.",
+    // NON-BLOCKING: Use .then() to handle success/error without freezing the UI.
+    authPromise
+      .then((userCredential) => {
+        if (userCredential.user) {
+          // Explicit navigation on success.
+          router.push("/dashboard");
+        }
+      })
+      .catch((error) => {
+        console.error("Authentication Error:", error);
+        toast({
+          variant: "destructive",
+          title: "Authentication Failed",
+          description: error.message || "An unexpected error occurred. Please try again.",
+        });
+      })
+      .finally(() => {
+        setLoading(false);
       });
-    } finally {
-      setLoading(false);
-    }
   };
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = () => {
     if (!auth) return;
     setLoading(true);
     const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      if (result.user) {
-        router.push("/dashboard");
-      }
-    } catch (error: any) {
-       toast({
-        variant: "destructive",
-        title: "Google Sign-In Failed",
-        description: error.code === 'auth/popup-closed-by-user' ? 'Sign-in cancelled.' : error.message,
+    
+    // NON-BLOCKING: Use .then() for non-blocking UI and proper popup handling.
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        if (result.user) {
+          router.push("/dashboard");
+        }
+      })
+      .catch((error) => {
+        toast({
+          variant: "destructive",
+          title: "Google Sign-In Failed",
+          description: error.code === 'auth/popup-closed-by-user' ? 'Sign-in cancelled.' : error.message,
+        });
+      })
+      .finally(() => {
+        setLoading(false);
       });
-    } finally {
-      setLoading(false);
-    }
   };
   
 
