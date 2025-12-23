@@ -4,14 +4,10 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle } from 'lucide-react';
+import { placeholderImages } from '@/lib/placeholder-images';
 
 export default function Home() {
-  const heroImage = {
-      "id": "hero-landing",
-      "description": "Abstract financial chart representing growth and planning.",
-      "imageUrl": "https://images.unsplash.com/photo-1749631934602-13b05524e688?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxmaW5hbmNlJTIwYWJzdHJhY3R8ZW58MHx8fHwxNzY2MjI5NzQ2fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "finance abstract"
-  };
+  const heroImage = placeholderImages.find(p => p.id === 'hero-landing');
 
   const features = [
     'AI-Powered Financial Advice',
@@ -21,6 +17,14 @@ export default function Home() {
     'Interactive Fintech Dashboard',
     'Secure Authentication with Firebase',
   ];
+
+  if (!heroImage) {
+    // Handle the case where the image is not found,
+    // perhaps by returning a fallback UI or logging an error.
+    // For now, we can prevent a crash by not rendering the image section.
+    // This is a defensive check to prevent server errors.
+    return <div>Error: Hero image not found.</div>;
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
