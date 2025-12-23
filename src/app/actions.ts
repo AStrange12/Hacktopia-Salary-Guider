@@ -2,7 +2,6 @@
 "use client";
 
 import {
-  getFirestore,
   collection,
   doc,
   getDoc,
@@ -11,6 +10,7 @@ import {
   addDoc,
   serverTimestamp,
   updateDoc,
+  deleteDoc,
   Firestore,
   Timestamp,
 } from "firebase/firestore";
@@ -43,7 +43,7 @@ export async function getExpenses(firestore: Firestore, userId: string): Promise
 
     return querySnapshot.docs.map(
       (doc) => ({ id: doc.id, ...doc.data() } as Expense)
-    );
+    ).sort((a, b) => b.date.toMillis() - a.date.toMillis());
   } catch (error) {
     console.error("Error getting expenses:", error);
     return [];
@@ -63,6 +63,17 @@ export async function addExpense(firestore: Firestore, userId: string, expenseDa
     return addDoc(expensesRef, expensePayload);
 }
 
+export async function updateExpense(firestore: Firestore, userId: string, expenseId: string, expenseData: Partial<Omit<Expense, 'id' | 'userId' | 'date'>>) {
+    if (!userId) throw new Error("User not authenticated");
+    const expenseRef = doc(firestore, "users", userId, "expenses", expenseId);
+    return updateDoc(expenseRef, expenseData);
+}
+
+export async function deleteExpense(firestore: Firestore, userId: string, expenseId: string) {
+    if (!userId) throw new Error("User not authenticated");
+    const expenseRef = doc(firestore, "users", userId, "expenses", expenseId);
+    return deleteDoc(expenseRef);
+}
 
 export async function getSavingsGoals(firestore: Firestore, userId: string): Promise<SavingsGoal[]> {
   try {
@@ -86,7 +97,7 @@ export async function addSavingsGoal(firestore: Firestore, userId: string, goalD
     const newGoalData = {
         ...goalData,
         deadline: Timestamp.fromDate(goalData.deadline),
-        currentAmount: 0,
+        currentAmount: goalData.currentAmount || 0,
         userId: userId,
     };
 
@@ -94,9 +105,31 @@ export async function addSavingsGoal(firestore: Firestore, userId: string, goalD
     return addDoc(goalsRef, newGoalData);
 }
 
+export async function updateSavingsGoal(firestore: Firestore, userId: string, goalId: string, goalData: Partial<Omit<SavingsGoal, 'id' | 'userId' | 'currentAmount'>> & { deadline?: Date }) {
+    if (!userId) throw new Error("User not authenticated");
+
+    const goalRef = doc(firestore, "users", userId, "savingsGoals", goalId);
+    const updateData: any = { ...goalData };
+
+    if (goalData.deadline) {
+        updateData.deadline = Timestamp.fromDate(goalData.deadline);
+    }
+    
+    return updateDoc(goalRef, updateData);
+}
+
+export async function deleteSavingsGoal(firestore: Firestore, userId: string, goalId: string) {
+    if (!userId) throw new Error("User not authenticated");
+    const goalRef = doc(firestore, "users", userId, "savingsGoals", goalId);
+    return deleteDoc(goalRef);
+}
+
+
 export async function updateUserSettings(firestore: Firestore, userId: string, settingsData: Partial<UserProfile>) {
     if (!userId) throw new Error("User not authenticated");
 
     const userRef = doc(firestore, "users", userId);
     return setDoc(userRef, settingsData, { merge: true });
 }
+
+    

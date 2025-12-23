@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -10,13 +11,48 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import type { SavingsGoal } from "@/lib/types";
-import { Target } from "lucide-react";
+import { MoreVertical, Pencil, Target, Trash2 } from "lucide-react";
+import { useState } from "react";
+import EditGoalDialog from "./edit-goal-dialog";
+import { useUser, useFirestore } from "@/firebase";
+import { deleteSavingsGoal } from "@/app/actions";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "../ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type GoalsListProps = {
   goals: SavingsGoal[];
+  onGoalChange: () => void;
 };
 
-export default function GoalsList({ goals }: GoalsListProps) {
+export default function GoalsList({ goals, onGoalChange }: GoalsListProps) {
+  const [editingGoal, setEditingGoal] = useState<SavingsGoal | null>(null);
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+
+  const handleDelete = async (goalId: string) => {
+    if (!user || !firestore) return;
+    if (window.confirm("Are you sure you want to delete this goal?")) {
+      try {
+        await deleteSavingsGoal(firestore, user.uid, goalId);
+        toast({ title: "Success", description: "Savings goal deleted." });
+        onGoalChange();
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message || "Failed to delete goal.",
+        });
+      }
+    }
+  };
+
   return (
     <>
       {goals.length > 0 ? (
@@ -28,7 +64,23 @@ export default function GoalsList({ goals }: GoalsListProps) {
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <CardTitle>{goal.name}</CardTitle>
-                    <Target className="h-5 w-5 text-muted-foreground"/>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 -mt-1 -mr-2">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setEditingGoal(goal)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDelete(goal.id)} className="text-destructive">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                   <CardDescription>{goal.category}</CardDescription>
                 </CardHeader>
@@ -57,6 +109,20 @@ export default function GoalsList({ goals }: GoalsListProps) {
           <p className="mt-1 text-sm text-muted-foreground">Click "Add Goal" to create your first one.</p>
         </div>
       )}
+
+      {editingGoal && (
+        <EditGoalDialog
+          goal={editingGoal}
+          isOpen={!!editingGoal}
+          onClose={() => setEditingGoal(null)}
+          onGoalUpdated={() => {
+            setEditingGoal(null);
+            onGoalChange();
+          }}
+        />
+      )}
     </>
   );
 }
+
+    

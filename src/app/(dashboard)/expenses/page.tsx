@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useUser, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { getExpenses } from '@/app/actions';
@@ -17,6 +18,15 @@ export default function ExpensesPage() {
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const fetchExpenses = useCallback(async () => {
+        if (user && firestore) {
+            setLoading(true);
+            const userExpenses = await getExpenses(firestore, user.uid);
+            setExpenses(userExpenses);
+            setLoading(false);
+        }
+    }, [user, firestore]);
+
     useEffect(() => {
         if (!isUserLoading && !user) {
             router.push('/login');
@@ -24,16 +34,8 @@ export default function ExpensesPage() {
     }, [isUserLoading, user, router]);
 
     useEffect(() => {
-        async function fetchExpenses() {
-            if (user && firestore) {
-                setLoading(true);
-                const userExpenses = await getExpenses(firestore, user.uid);
-                setExpenses(userExpenses);
-                setLoading(false);
-            }
-        }
         fetchExpenses();
-    }, [user, firestore]);
+    }, [fetchExpenses]);
 
     if (loading || isUserLoading) {
         return (
@@ -43,9 +45,9 @@ export default function ExpensesPage() {
         );
     }
 
-    const sortedExpenses = expenses.sort((a, b) => b.date.toMillis() - a.date.toMillis());
+    const sortedExpenses = [...(expenses || [])].sort((a, b) => b.date.toMillis() - a.date.toMillis());
 
-    const spendingByCategory = expenses.reduce((acc, expense) => {
+    const spendingByCategory = (expenses || []).reduce((acc, expense) => {
         if (!acc[expense.category]) {
             acc[expense.category] = 0;
         }
@@ -63,7 +65,7 @@ export default function ExpensesPage() {
         <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
             <div className="flex items-center justify-between space-y-2">
                 <h2 className="text-3xl font-bold tracking-tight">Expenses</h2>
-                <AddExpenseDialog />
+                <AddExpenseDialog onExpenseAdded={fetchExpenses}/>
             </div>
 
             <Card>
@@ -84,9 +86,11 @@ export default function ExpensesPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <ExpensesDataTable expenses={sortedExpenses} />
+                    <ExpensesDataTable expenses={sortedExpenses} onExpenseChange={fetchExpenses} />
                 </CardContent>
             </Card>
         </main>
     );
 }
+
+    

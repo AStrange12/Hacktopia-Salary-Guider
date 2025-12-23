@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser, useFirestore } from '@/firebase';
 import {
@@ -35,43 +36,42 @@ export default function DashboardPage() {
   const [spendingSummary, setSpendingSummary] = useState<SummarizeMonthlySpendingOutput | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/login');
-    }
-  }, [isUserLoading, user, router]);
+  const fetchData = useCallback(async () => {
+    if (user && firestore) {
+      setLoading(true);
+      const [profile, userExpenses, userGoals] = await Promise.all([
+        getUser(firestore, user.uid),
+        getExpenses(firestore, user.uid),
+        getSavingsGoals(firestore, user.uid),
+      ]);
 
-  useEffect(() => {
-    async function fetchData() {
-      if (user && firestore) {
-        setLoading(true);
-        const [profile, userExpenses, userGoals] = await Promise.all([
-          getUser(firestore, user.uid),
-          getExpenses(firestore, user.uid),
-          getSavingsGoals(firestore, user.uid),
-        ]);
+      setUserProfile(profile);
+      setExpenses(userExpenses);
+      setSavingsGoals(userGoals);
 
-        setUserProfile(profile);
-        setExpenses(userExpenses);
-        setSavingsGoals(userGoals);
-
-        if (profile) {
+      if (profile) {
+          if (userExpenses.length > 0) {
             const analysis = await analyzeSpendingBehavior({
                 expenses: userExpenses.map(e => ({...e, date: e.date.toDate().toISOString()})),
                 income: profile.salary || 0,
             }).catch(() => null);
             setSpendingAnalysis(analysis);
+          } else {
+            setSpendingAnalysis(null);
+          }
+          
 
-            const now = new Date();
-            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-            const monthlyExpenses = userExpenses.filter(e => e.date.toDate() >= startOfMonth);
+          const now = new Date();
+          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+          const monthlyExpenses = userExpenses.filter(e => e.date.toDate() >= startOfMonth);
 
-            const needsTotal = monthlyExpenses.filter(e => e.type === 'need').reduce((acc, exp) => acc + exp.amount, 0);
-            const wantsTotal = monthlyExpenses.filter(e => e.type === 'want').reduce((acc, exp) => acc + exp.amount, 0);
-            const totalSpent = needsTotal + wantsTotal;
-            const income = profile.salary || 0;
-            const savingsTotal = income > totalSpent ? income - totalSpent : 0;
-            
+          const needsTotal = monthlyExpenses.filter(e => e.type === 'need').reduce((acc, exp) => acc + exp.amount, 0);
+          const wantsTotal = monthlyExpenses.filter(e => e.type === 'want').reduce((acc, exp) => acc + exp.amount, 0);
+          const totalSpent = needsTotal + wantsTotal;
+          const income = profile.salary || 0;
+          const savingsTotal = income > totalSpent ? income - totalSpent : 0;
+          
+          if (needsTotal > 0 || wantsTotal > 0) {
             const summary = await summarizeMonthlySpending({
                 needs: needsTotal,
                 wants: wantsTotal,
@@ -79,13 +79,24 @@ export default function DashboardPage() {
                 totalIncome: income
             }).catch(() => null);
             setSpendingSummary(summary);
-        }
-
-        setLoading(false);
+          } else {
+            setSpendingSummary(null);
+          }
       }
+
+      setLoading(false);
     }
-    fetchData();
   }, [user, firestore]);
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [isUserLoading, user, router]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   if (loading || isUserLoading) {
     return (
@@ -111,8 +122,8 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
         <div className="flex items-center space-x-2">
-          <AddExpenseDialog />
-          <AddGoalDialog />
+          <AddExpenseDialog onExpenseAdded={fetchData}/>
+          <AddGoalDialog onGoalAdded={fetchData}/>
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -148,7 +159,7 @@ export default function DashboardPage() {
           savings={savingsTotal}
           income={income}
         />
-        <RecentExpenses expenses={expenses.slice(0, 10)} />
+        <RecentExpenses expenses={expenses.slice(0, 10)} onExpenseChange={fetchData}/>
       </div>
        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="lg:col-span-4">
@@ -160,9 +171,11 @@ export default function DashboardPage() {
             </CardContent>
         </Card>
         <div className="lg:col-span-3">
-            <SavingsGoals goals={savingsGoals} />
+            <SavingsGoals goals={savingsGoals} onGoalChange={fetchData}/>
         </div>
        </div>
     </main>
   );
 }
+
+    

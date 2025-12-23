@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useUser, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { getSavingsGoals } from '@/app/actions';
@@ -15,6 +16,15 @@ export default function GoalsPage() {
     const [goals, setGoals] = useState<SavingsGoal[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const fetchGoals = useCallback(async () => {
+        if (user && firestore) {
+            setLoading(true);
+            const userGoals = await getSavingsGoals(firestore, user.uid);
+            setGoals(userGoals);
+            setLoading(false);
+        }
+    }, [user, firestore]);
+
     useEffect(() => {
         if (!isUserLoading && !user) {
             router.push('/login');
@@ -22,16 +32,8 @@ export default function GoalsPage() {
     }, [isUserLoading, user, router]);
 
     useEffect(() => {
-        async function fetchGoals() {
-            if (user && firestore) {
-                setLoading(true);
-                const userGoals = await getSavingsGoals(firestore, user.uid);
-                setGoals(userGoals);
-                setLoading(false);
-            }
-        }
         fetchGoals();
-    }, [user, firestore]);
+    }, [fetchGoals]);
 
     if (loading || isUserLoading) {
         return (
@@ -45,11 +47,13 @@ export default function GoalsPage() {
         <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
             <div className="flex items-center justify-between space-y-2">
                 <h2 className="text-3xl font-bold tracking-tight">Savings Goals</h2>
-                <AddGoalDialog />
+                <AddGoalDialog onGoalAdded={fetchGoals} />
             </div>
             <div className="pt-4">
-                <GoalsList goals={goals} />
+                <GoalsList goals={goals} onGoalChange={fetchGoals} />
             </div>
         </main>
     );
 }
+
+    

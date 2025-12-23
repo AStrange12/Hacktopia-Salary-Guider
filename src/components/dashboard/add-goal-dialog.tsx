@@ -27,14 +27,18 @@ import { useToast } from "@/hooks/use-toast";
 import { useRef, useState } from "react";
 import { useUser, useFirestore } from "@/firebase";
 
-export default function AddGoalDialog() {
+type AddGoalDialogProps = {
+    onGoalAdded: () => void;
+};
+
+export default function AddGoalDialog({ onGoalAdded }: AddGoalDialogProps) {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
   const [open, setOpen] = useState(false);
   const { user } = useUser();
   const firestore = useFirestore();
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!user || !firestore) {
@@ -50,22 +54,22 @@ export default function AddGoalDialog() {
         category: formData.get('category') as 'Emergency' | 'Gold' | 'Investments' | 'Other',
     };
 
-    setOpen(false);
-
-    addSavingsGoal(firestore, user.uid, goalData).then(() => {
+    try {
+        await addSavingsGoal(firestore, user.uid, goalData);
         toast({
             title: "Success",
             description: "Savings goal added successfully.",
         });
         formRef.current?.reset();
-    }).catch((error: any) => {
+        setOpen(false);
+        onGoalAdded(); // Callback to refetch data
+    } catch (error: any) {
          toast({
             variant: "destructive",
             title: "Error",
             description: error.message || "Failed to add savings goal.",
         });
-        setOpen(true);
-    });
+    }
   };
 
   return (
@@ -129,3 +133,5 @@ export default function AddGoalDialog() {
     </Dialog>
   );
 }
+
+    

@@ -7,9 +7,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,30 +19,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PlusCircle } from "lucide-react";
-import { addExpense } from "@/app/actions";
+import { updateExpense } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
-import { useRef, useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser, useFirestore } from "@/firebase";
+import { Expense } from "@/lib/types";
 
-type AddExpenseDialogProps = {
-  onExpenseAdded: () => void;
+type EditExpenseDialogProps = {
+  expense: Expense;
+  isOpen: boolean;
+  onClose: () => void;
+  onExpenseUpdated: () => void;
 };
 
-export default function AddExpenseDialog({ onExpenseAdded }: AddExpenseDialogProps) {
+export default function EditExpenseDialog({ expense, isOpen, onClose, onExpenseUpdated }: EditExpenseDialogProps) {
   const { toast } = useToast();
-  const formRef = useRef<HTMLFormElement>(null);
-  const [open, setOpen] = useState(false);
   const { user } = useUser();
   const firestore = useFirestore();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!user || !firestore) {
-        toast({ variant: "destructive", title: "Error", description: "You must be logged in." });
-        return;
+      toast({ variant: "destructive", title: "Error", description: "You must be logged in." });
+      return;
     }
 
+    setIsSubmitting(true);
     const formData = new FormData(event.currentTarget);
     const expenseData = {
       description: formData.get('description') as string,
@@ -54,56 +55,50 @@ export default function AddExpenseDialog({ onExpenseAdded }: AddExpenseDialogPro
     };
 
     try {
-        await addExpense(firestore, user.uid, expenseData);
-        toast({
-            title: "Success",
-            description: "Expense added successfully.",
-        });
-        formRef.current?.reset();
-        setOpen(false);
-        onExpenseAdded(); // Callback to refetch data
+      await updateExpense(firestore, user.uid, expense.id, expenseData);
+      toast({
+        title: "Success",
+        description: "Expense updated successfully.",
+      });
+      onExpenseUpdated();
     } catch (error: any) {
-        toast({
-            variant: "destructive",
-            title: "Error",
-            description: error.message || "Failed to add expense.",
-        });
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to update expense.",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add Expense
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Expense</DialogTitle>
+          <DialogTitle>Edit Expense</DialogTitle>
           <DialogDescription>
-            Enter the details of your transaction below.
+            Update the details of your transaction.
           </DialogDescription>
         </DialogHeader>
-        <form ref={formRef} onSubmit={handleSubmit} className="grid gap-4 py-4">
+        <form onSubmit={handleSubmit} className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="description" className="text-right">
               Description
             </Label>
-            <Input id="description" name="description" className="col-span-3" required />
+            <Input id="description" name="description" className="col-span-3" defaultValue={expense.description} required />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="amount" className="text-right">
               Amount (₹)
             </Label>
-            <Input id="amount" name="amount" type="number" step="0.01" className="col-span-3" required/>
+            <Input id="amount" name="amount" type="number" step="0.01" className="col-span-3" defaultValue={expense.amount} required />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="category" className="text-right">
               Category
             </Label>
-            <Select name="category" required>
+            <Select name="category" defaultValue={expense.category} required>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
@@ -124,7 +119,7 @@ export default function AddExpenseDialog({ onExpenseAdded }: AddExpenseDialogPro
             <Label htmlFor="type" className="text-right">
               Type
             </Label>
-            <Select name="type" required>
+            <Select name="type" defaultValue={expense.type} required>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Is it a need or a want?" />
               </SelectTrigger>
@@ -135,10 +130,10 @@ export default function AddExpenseDialog({ onExpenseAdded }: AddExpenseDialogPro
             </Select>
           </div>
           <DialogFooter>
-            <DialogClose asChild>
-                <Button type="button" variant="secondary">Cancel</Button>
-            </DialogClose>
-            <Button type="submit">Add Expense</Button>
+            <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Saving..." : "Save Changes"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
