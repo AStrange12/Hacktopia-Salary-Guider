@@ -16,6 +16,7 @@ export default function AdvicePage() {
     const router = useRouter();
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [spendingAnalysis, setSpendingAnalysis] = useState<AnalyzeSpendingBehaviorOutput | null>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (!isUserLoading && !user) {
@@ -26,31 +27,47 @@ export default function AdvicePage() {
     useEffect(() => {
         async function fetchData() {
             if (user && firestore) {
+                setLoading(true);
                 const profile = await getUser(firestore, user.uid);
                 setUserProfile(profile);
 
                 if (profile) {
                     const expenses = await getExpenses(firestore, user.uid);
-                    const spendingAnalysisResult = await analyzeSpendingBehavior({
-                        expenses: expenses.map(e => ({ ...e, date: e.date.toDate().toISOString() })),
-                        income: profile.salary || 0,
-                    }).catch(() => null);
-
-                    if (spendingAnalysisResult) {
-                        setSpendingAnalysis(spendingAnalysisResult);
+                    if (expenses.length > 0) {
+                        try {
+                            const spendingAnalysisResult = await analyzeSpendingBehavior({
+                                expenses: expenses.map(e => ({ ...e, date: e.date.toDate().toISOString() })),
+                                income: profile.salary || 0,
+                            });
+                            setSpendingAnalysis(spendingAnalysisResult);
+                        } catch (error) {
+                            console.error("Failed to analyze spending:", error);
+                            setSpendingAnalysis(null);
+                        }
+                    } else {
+                        setSpendingAnalysis(null);
                     }
                 }
+                setLoading(false);
             }
         }
         fetchData();
     }, [user, firestore]);
 
-    if (isUserLoading || !userProfile) {
+    if (isUserLoading || loading) {
         return (
             <div className="flex h-screen w-screen items-center justify-center">
                 <div className="h-16 w-16 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent"></div>
             </div>
         );
+    }
+
+    if (!userProfile) {
+        return (
+             <div className="flex h-screen w-screen items-center justify-center">
+                <p>Could not load user profile.</p>
+            </div>
+        )
     }
 
     return (

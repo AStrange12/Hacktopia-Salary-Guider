@@ -91,7 +91,7 @@ export default function AdviceGenerator({ userProfile, spendingAnalysis }: Advic
               </FormItem>
             )}
           />
-          <Button type="submit" disabled={isLoading || !spendingAnalysis}>
+          <Button type="submit" disabled={isLoading }>
             {isLoading ? "Generating..." : <><Sparkles className="mr-2 h-4 w-4" /> Get Advice</>}
           </Button>
         </form>
