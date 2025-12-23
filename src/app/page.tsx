@@ -1,12 +1,17 @@
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle } from 'lucide-react';
-import { placeholderImages } from '@/lib/placeholder-images';
 
 export default function Home() {
-  const heroImage = placeholderImages.find(img => img.id === 'hero-landing');
+  const heroImage = {
+      "id": "hero-landing",
+      "description": "Abstract financial chart representing growth and planning.",
+      "imageUrl": "https://images.unsplash.com/photo-1749631934602-13b05524e688?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxmaW5hbmNlJTIwYWJzdHJhY3R8ZW58MHx8fHwxNzY2MjI5NzQ2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "finance abstract"
+  };
 
   const features = [
     'AI-Powered Financial Advice',
@@ -65,7 +70,7 @@ export default function Home() {
                   </Button>
                 </div>
               </div>
-              {heroImage && (
+              
                 <Image
                   src={heroImage.imageUrl}
                   alt={heroImage.description}
@@ -74,7 +79,7 @@ export default function Home() {
                   data-ai-hint={heroImage.imageHint}
                   className="mx-auto aspect-[3/2] overflow-hidden rounded-xl object-cover sm:w-full"
                 />
-              )}
+              
             </div>
           </div>
         </section>
