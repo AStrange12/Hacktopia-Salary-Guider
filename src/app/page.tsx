@@ -3,10 +3,10 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle } from 'lucide-react';
-import { placeholderImages as allImages } from '@/lib/placeholder-images.json';
+import { placeholderImages } from '@/lib/placeholder-images';
 
 export default function Home() {
-  const heroImage = allImages[0];
+  const heroImage = placeholderImages.find(img => img.id === 'hero-landing');
 
   const features = [
     'AI-Powered Financial Advice',
