@@ -6,7 +6,7 @@ import { CheckCircle } from 'lucide-react';
 import { placeholderImages } from '@/lib/placeholder-images';
 
 export default function Home() {
-  const heroImage = placeholderImages.find((img) => img.id === 'hero-landing');
+  const heroImage = placeholderImages[0];
 
   const features = [
     'AI-Powered Financial Advice',
