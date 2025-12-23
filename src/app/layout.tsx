@@ -7,8 +7,8 @@ import { Toaster } from '@/components/ui/toaster';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'FinAI Advisor',
-  description: 'Your personal AI-powered financial advisor',
+  title: 'Salary Guider',
+  description: 'Your personal guide to managing your salary',
 };
 
 export default function RootLayout({

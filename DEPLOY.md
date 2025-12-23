@@ -1,4 +1,4 @@
-# Deployment Instructions for FinAI Advisor
+# Deployment Instructions for Salary Guider
 
 This guide provides step-by-step instructions to deploy your Next.js application to Firebase Hosting.
 

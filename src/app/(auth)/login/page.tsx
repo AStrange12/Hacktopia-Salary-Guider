@@ -20,7 +20,7 @@ export default function LoginPage() {
             >
                 <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
             </svg>
-            <span className="ml-2 text-xl font-bold">FinAI Advisor</span>
+            <span className="ml-2 text-xl font-bold">Salary Guider</span>
         </Link>
        </div>
        <Tabs defaultValue="login" className="w-full max-w-sm">

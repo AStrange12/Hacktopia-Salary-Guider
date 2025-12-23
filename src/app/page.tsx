@@ -33,7 +33,7 @@ export default function Home() {
           >
             <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
           </svg>
-          <span className="ml-2 text-xl font-bold">FinAI Advisor</span>
+          <span className="ml-2 text-xl font-bold">Salary Guider</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6">
           <Button asChild variant="ghost">
@@ -55,7 +55,7 @@ export default function Home() {
                     Take Control of Your Finances with AI
                   </h1>
                   <p className="max-w-[600px] text-muted-foreground md:text-xl">
-                    FinAI Advisor provides personalized insights and intelligent
+                    Salary Guider provides personalized insights and intelligent
                     budgeting to help you achieve your financial goals.
                   </p>
                 </div>
@@ -113,7 +113,7 @@ export default function Home() {
 
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
         <p className="text-xs text-muted-foreground">
-          &copy; {new Date().getFullYear()} FinAI Advisor. All rights reserved.
+          &copy; {new Date().getFullYear()} Salary Guider. All rights reserved.
         </p>
         <nav className="sm:ml-auto flex gap-4 sm:gap-6">
           <Link
