@@ -2,8 +2,8 @@
   "placeholderImages": [
     {
       "id": "hero-landing",
-      "description": "An illustration showing a phone with a financial advisor, a piggy bank, and financial charts, representing AI-powered financial guidance.",
-      "imageUrl": "https://storage.googleapis.com/project-spark-335215.appspot.com/a422475a-6e21-4d1a-8263-6c825a075673",
+      "description": "An illustration showing a person reviewing their finances on a laptop, with charts and graphs in the background, conveying a sense of control and insight.",
+      "imageUrl": "/heroImg.png",
       "imageHint": "finance abstract"
     }
   ]
