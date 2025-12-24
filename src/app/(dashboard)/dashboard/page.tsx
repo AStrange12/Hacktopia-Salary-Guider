@@ -51,14 +51,16 @@ export default function DashboardPage() {
 
       if (profile) {
           if (userExpenses.length > 0) {
-            const analysis = await analyzeSpendingBehavior({
-                expenses: userExpenses.map(e => ({...e, date: e.date.toDate().toISOString()})),
-                income: profile.salary || 0,
-            }).catch((e) => {
+            try {
+              const analysis = await analyzeSpendingBehavior({
+                  expenses: userExpenses.map(e => ({...e, date: e.date.toDate().toISOString()})),
+                  income: profile.salary || 0,
+              });
+              setSpendingAnalysis(analysis);
+            } catch (e) {
               console.error("Failed to analyze spending behavior", e);
-              return null;
-            });
-            setSpendingAnalysis(analysis);
+              setSpendingAnalysis(null);
+            }
           } else {
             setSpendingAnalysis(null);
           }
@@ -75,16 +77,18 @@ export default function DashboardPage() {
           const savingsTotal = income > totalSpent ? income - totalSpent : 0;
           
           if (needsTotal > 0 || wantsTotal > 0) {
-            const summary = await summarizeMonthlySpending({
-                needs: needsTotal,
-                wants: wantsTotal,
-                savings: savingsTotal,
-                totalIncome: income
-            }).catch((e) => {
-              console.error("Failed to summarize monthly spending", e);
-              return null;
-            });
-            setSpendingSummary(summary);
+             try {
+                const summary = await summarizeMonthlySpending({
+                    needs: needsTotal,
+                    wants: wantsTotal,
+                    savings: savingsTotal,
+                    totalIncome: income
+                });
+                setSpendingSummary(summary);
+              } catch (e) {
+                console.error("Failed to summarize monthly spending", e);
+                setSpendingSummary(null);
+              }
           } else {
             setSpendingSummary(null);
           }

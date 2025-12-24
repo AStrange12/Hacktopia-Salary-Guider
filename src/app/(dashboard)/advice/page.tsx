@@ -47,6 +47,12 @@ export default function AdvicePage() {
     }, [user, firestore]);
 
     useEffect(() => {
+        if (!isUserLoading && !user) {
+            router.push('/login');
+        }
+    }, [isUserLoading, user, router]);
+
+    useEffect(() => {
         fetchProfileAndRunAnalysis();
     }, [fetchProfileAndRunAnalysis]);
 
