@@ -14,7 +14,31 @@ import {
   Firestore,
   Timestamp,
 } from "firebase/firestore";
+import { User } from "firebase/auth";
 import { UserProfile, Expense, SavingsGoal } from "@/lib/types";
+
+export async function createUserProfile(firestore: Firestore, user: User) {
+    const userRef = doc(firestore, "users", user.uid);
+    const userDoc = await getDoc(userRef);
+
+    if (!userDoc.exists()) {
+        const newUserProfile: Omit<UserProfile, 'uid'> = {
+            email: user.email,
+            name: user.displayName,
+            photoURL: user.photoURL,
+            createdAt: serverTimestamp() as Timestamp,
+            salary: 0,
+            taxRegime: 'new',
+            budget: {
+                needs: 50,
+                wants: 30,
+                savings: 20,
+            },
+        };
+        await setDoc(userRef, newUserProfile);
+    }
+}
+
 
 export async function getUser(firestore: Firestore, uid: string): Promise<UserProfile | null> {
   try {

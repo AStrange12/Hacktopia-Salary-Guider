@@ -8,16 +8,18 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
+  getAdditionalUserInfo
 } from "firebase/auth";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Chrome } from "lucide-react";
-import { useAuth } from "@/firebase";
+import { useAuth, useFirestore } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { createUserProfile } from "@/app/actions";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email." }),
@@ -33,6 +35,7 @@ export function LoginForm({ isRegister = false }: LoginFormProps) {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const auth = useAuth();
+  const firestore = useFirestore();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -42,51 +45,51 @@ export function LoginForm({ isRegister = false }: LoginFormProps) {
     },
   });
 
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    if (!auth) return;
+  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!auth || !firestore) return;
     setLoading(true);
 
-    const authPromise = isRegister
-      ? createUserWithEmailAndPassword(auth, values.email, values.password)
-      : signInWithEmailAndPassword(auth, values.email, values.password);
-
-    authPromise
-      .then((userCredential) => {
-        // The onAuthStateChanged listener in FirebaseProvider will handle the redirect.
-        // No need to push here.
-      })
-      .catch((error) => {
+    try {
+        if (isRegister) {
+            const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+            await createUserProfile(firestore, userCredential.user);
+        } else {
+            await signInWithEmailAndPassword(auth, values.email, values.password);
+        }
+        router.push("/dashboard");
+    } catch (error: any) {
         console.error("Authentication Error:", error);
         toast({
-          variant: "destructive",
-          title: "Authentication Failed",
-          description: error.message || "An unexpected error occurred. Please try again.",
+            variant: "destructive",
+            title: "Authentication Failed",
+            description: error.message || "An unexpected error occurred. Please try again.",
         });
-      })
-      .finally(() => {
+    } finally {
         setLoading(false);
-      });
+    }
   };
 
-  const handleGoogleSignIn = () => {
-    if (!auth) return;
+  const handleGoogleSignIn = async () => {
+    if (!auth || !firestore) return;
     setLoading(true);
     const provider = new GoogleAuthProvider();
     
-    signInWithPopup(auth, provider)
-      .then((result) => {
-        // The onAuthStateChanged listener in FirebaseProvider will handle the redirect.
-      })
-      .catch((error) => {
+    try {
+        const result = await signInWithPopup(auth, provider);
+        const additionalInfo = getAdditionalUserInfo(result);
+        if (additionalInfo?.isNewUser) {
+            await createUserProfile(firestore, result.user);
+        }
+        router.push('/dashboard');
+    } catch (error: any) {
         toast({
-          variant: "destructive",
-          title: "Google Sign-In Failed",
-          description: error.code === 'auth/popup-closed-by-user' ? 'Sign-in cancelled.' : error.message,
+            variant: "destructive",
+            title: "Google Sign-In Failed",
+            description: error.code === 'auth/popup-closed-by-user' ? 'Sign-in cancelled.' : error.message,
         });
-      })
-      .finally(() => {
+    } finally {
         setLoading(false);
-      });
+    }
   };
   
 
