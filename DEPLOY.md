@@ -13,7 +13,7 @@ This guide provides step-by-step instructions to deploy your Next.js application
     ```bash
     firebase login
     ```
-4.  **Environment Variables**: Create a `.env.local` file in the root of your project by copying `.env.example`. Fill in the values from your Firebase project's settings.
+4.  **Environment Variables**: Create a `.env.local` file in the root of your project by copying `.env.example`. Fill in the values from your Firebase project's settings (Go to Project Settings > General > Your apps > Firebase SDK snippet > Config).
 
 ## Step-by-Step Deployment
 

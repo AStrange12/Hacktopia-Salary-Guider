@@ -21,6 +21,13 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
       appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
       measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
     };
+    // Fallback to the config file if env vars are not set (for local dev)
+    if (!firebaseConfig.apiKey) {
+        console.warn("Firebase config not found in environment variables. Falling back to local config file. For production, please set up environment variables.");
+        const localConfig = require('@/firebase/config').firebaseConfig;
+        return initializeFirebase(localConfig);
+    }
+    
     return initializeFirebase(firebaseConfig);
   }, []);
 
