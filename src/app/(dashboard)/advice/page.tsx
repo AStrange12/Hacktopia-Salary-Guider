@@ -16,10 +16,11 @@ export default function AdvicePage() {
     const firestore = useFirestore();
     const router = useRouter();
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+    const [expenses, setExpenses] = useState<Expense[]>([]);
     const [spendingAnalysis, setSpendingAnalysis] = useState<AnalyzeSpendingBehaviorOutput | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const fetchProfileAndRunAnalysis = useCallback(async () => {
+    const fetchProfileAndExpenses = useCallback(async () => {
         if (user && firestore) {
             setLoading(true);
             try {
@@ -27,19 +28,9 @@ export default function AdvicePage() {
                 setUserProfile(profile);
 
                 const userExpenses = await getExpenses(firestore, user.uid);
-
-                if (profile && userExpenses.length > 0) {
-                    const spendingAnalysisResult = await analyzeSpendingBehavior({
-                        expenses: userExpenses.map(e => ({ ...e, date: e.date.toDate().toISOString() })),
-                        income: profile.salary || 0,
-                    });
-                    setSpendingAnalysis(spendingAnalysisResult);
-                } else {
-                    setSpendingAnalysis(null);
-                }
+                setExpenses(userExpenses);
             } catch (error) {
-                console.error("Failed to fetch data or run analysis:", error);
-                setSpendingAnalysis(null);
+                console.error("Failed to fetch data:", error);
             } finally {
                 setLoading(false);
             }
@@ -49,12 +40,33 @@ export default function AdvicePage() {
     useEffect(() => {
         if (!isUserLoading && !user) {
             router.push('/login');
+        } else if (user && firestore) {
+            fetchProfileAndExpenses();
         }
-    }, [isUserLoading, user, router]);
+    }, [isUserLoading, user, router, firestore, fetchProfileAndExpenses]);
 
     useEffect(() => {
-        fetchProfileAndRunAnalysis();
-    }, [fetchProfileAndRunAnalysis]);
+        const runAnalysis = async () => {
+            if (userProfile && expenses.length > 0) {
+                 try {
+                    const spendingAnalysisResult = await analyzeSpendingBehavior({
+                        expenses: expenses.map(e => ({ ...e, date: e.date.toDate().toISOString() })),
+                        income: userProfile.salary || 0,
+                    });
+                    setSpendingAnalysis(spendingAnalysisResult);
+                 } catch (error) {
+                    console.error("Failed to run analysis:", error);
+                    setSpendingAnalysis(null);
+                 }
+            } else {
+                setSpendingAnalysis(null);
+            }
+        };
+
+        if (!loading) {
+            runAnalysis();
+        }
+    }, [userProfile, expenses, loading]);
 
     if (isUserLoading || loading) {
         return (

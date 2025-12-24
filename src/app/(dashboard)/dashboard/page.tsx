@@ -48,52 +48,6 @@ export default function DashboardPage() {
       setUserProfile(profile);
       setExpenses(userExpenses);
       setSavingsGoals(userGoals);
-
-      if (profile) {
-          if (userExpenses.length > 0) {
-            try {
-              const analysis = await analyzeSpendingBehavior({
-                  expenses: userExpenses.map(e => ({...e, date: e.date.toDate().toISOString()})),
-                  income: profile.salary || 0,
-              });
-              setSpendingAnalysis(analysis);
-            } catch (e) {
-              console.error("Failed to analyze spending behavior", e);
-              setSpendingAnalysis(null);
-            }
-          } else {
-            setSpendingAnalysis(null);
-          }
-          
-
-          const now = new Date();
-          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-          const monthlyExpenses = userExpenses.filter(e => e.date.toDate() >= startOfMonth);
-
-          const needsTotal = monthlyExpenses.filter(e => e.type === 'need').reduce((acc, exp) => acc + exp.amount, 0);
-          const wantsTotal = monthlyExpenses.filter(e => e.type === 'want').reduce((acc, exp) => acc + exp.amount, 0);
-          const totalSpent = needsTotal + wantsTotal;
-          const income = profile.salary || 0;
-          const savingsTotal = income > totalSpent ? income - totalSpent : 0;
-          
-          if (needsTotal > 0 || wantsTotal > 0) {
-             try {
-                const summary = await summarizeMonthlySpending({
-                    needs: needsTotal,
-                    wants: wantsTotal,
-                    savings: savingsTotal,
-                    totalIncome: income
-                });
-                setSpendingSummary(summary);
-              } catch (e) {
-                console.error("Failed to summarize monthly spending", e);
-                setSpendingSummary(null);
-              }
-          } else {
-            setSpendingSummary(null);
-          }
-      }
-
       setLoading(false);
     }
   }, [user, firestore]);
@@ -101,6 +55,58 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    const runAnalysis = async () => {
+        if (!userProfile || expenses.length === 0) {
+            setSpendingAnalysis(null);
+            setSpendingSummary(null);
+            return;
+        };
+
+        try {
+            const analysis = await analyzeSpendingBehavior({
+                expenses: expenses.map(e => ({...e, date: e.date.toDate().toISOString()})),
+                income: userProfile.salary || 0,
+            });
+            setSpendingAnalysis(analysis);
+        } catch (e) {
+            console.error("Failed to analyze spending behavior", e);
+            setSpendingAnalysis(null);
+        }
+
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const monthlyExpenses = expenses.filter(e => e.date.toDate() >= startOfMonth);
+
+        const needsTotal = monthlyExpenses.filter(e => e.type === 'need').reduce((acc, exp) => acc + exp.amount, 0);
+        const wantsTotal = monthlyExpenses.filter(e => e.type === 'want').reduce((acc, exp) => acc + exp.amount, 0);
+        const totalSpent = needsTotal + wantsTotal;
+        const income = userProfile.salary || 0;
+        const savingsTotal = income > totalSpent ? income - totalSpent : 0;
+        
+        if (needsTotal > 0 || wantsTotal > 0) {
+            try {
+              const summary = await summarizeMonthlySpending({
+                  needs: needsTotal,
+                  wants: wantsTotal,
+                  savings: savingsTotal,
+                  totalIncome: income
+              });
+              setSpendingSummary(summary);
+            } catch (e) {
+              console.error("Failed to summarize monthly spending", e);
+              setSpendingSummary(null);
+            }
+        } else {
+          setSpendingSummary(null);
+        }
+    };
+    
+    if (!loading) {
+        runAnalysis();
+    }
+  }, [userProfile, expenses, loading]);
 
   if (loading || isUserLoading) {
     return (
