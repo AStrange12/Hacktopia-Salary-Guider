@@ -10,6 +10,7 @@ import { Button } from "../ui/button";
 import { Menu } from "lucide-react";
 import { Sidebar } from "./sidebar";
 import { useState } from "react";
+import { ThemeToggle } from "./theme-toggle";
 
 export function Header() {
   const [open, setOpen] = useState(false);
@@ -33,6 +34,7 @@ export function Header() {
       </Sheet>
 
       <div className="flex w-full items-center justify-end gap-4">
+        <ThemeToggle />
         <UserNav />
       </div>
     </header>
