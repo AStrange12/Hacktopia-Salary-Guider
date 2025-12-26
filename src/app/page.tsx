@@ -10,12 +10,30 @@ export default function Home() {
   const heroImage = placeholderImages.find(p => p.id === 'hero-landing');
 
   const features = [
-    'AI-Powered Financial Advice',
-    'Real-time Spending Analysis',
-    'Personalized Budgeting (50/30/20 Rule)',
-    'Savings Goal Tracking',
-    'Interactive Fintech Dashboard',
-    'Secure Authentication with Firebase',
+    {
+      text: 'AI-Powered Financial Advice',
+      imageId: 'feature-ai-advice'
+    },
+    {
+      text: 'Real-time Spending Analysis',
+      imageId: 'feature-spending-analysis'
+    },
+    {
+      text: 'Personalized Budgeting (50/30/20 Rule)',
+      imageId: 'feature-budgeting'
+    },
+    {
+      text: 'Savings Goal Tracking',
+      imageId: 'feature-goal-tracking'
+    },
+    {
+      text: 'Interactive Fintech Dashboard',
+      imageId: 'feature-dashboard'
+    },
+    {
+      text: 'Secure Authentication with Firebase',
+      imageId: 'feature-security'
+    },
   ];
 
   if (!heroImage) {
@@ -98,19 +116,34 @@ export default function Home() {
               </div>
             </div>
             <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:grid-cols-3 lg:max-w-none pt-12">
-              {features.map((feature) => (
-                <div key={feature} className="relative group">
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-secondary rounded-lg blur opacity-10 group-hover:opacity-30 transition duration-1000 group-hover:duration-200"></div>
-                  <Card className="relative h-full bg-card/80 backdrop-blur-sm border border-white/10 transition-all duration-300 group-hover:border-white/20">
-                    <CardHeader>
-                      <CardTitle className="flex items-start gap-4 text-lg font-medium">
-                        <CheckCircle className="mt-1 h-5 w-5 shrink-0 text-primary" />
-                        <span>{feature}</span>
-                      </CardTitle>
-                    </CardHeader>
-                  </Card>
-                </div>
-              ))}
+              {features.map((feature) => {
+                const image = placeholderImages.find(p => p.id === feature.imageId);
+                return (
+                  <div key={feature.text} className="relative group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-secondary rounded-lg blur opacity-10 group-hover:opacity-30 transition duration-1000 group-hover:duration-200"></div>
+                    <Card className="relative h-full bg-card/80 backdrop-blur-sm border border-white/10 transition-all duration-300 group-hover:border-white/20">
+                      {image && (
+                         <CardContent className="p-0">
+                           <Image
+                            src={image.imageUrl}
+                            alt={image.description}
+                            width={600}
+                            height={400}
+                            data-ai-hint={image.imageHint}
+                            className="object-cover w-full h-40 rounded-t-lg"
+                          />
+                         </CardContent>
+                      )}
+                      <CardHeader>
+                        <CardTitle className="flex items-start gap-4 text-lg font-medium">
+                          <CheckCircle className="mt-1 h-5 w-5 shrink-0 text-primary" />
+                          <span>{feature.text}</span>
+                        </CardTitle>
+                      </CardHeader>
+                    </Card>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>

@@ -5,6 +5,42 @@
       "description": "An abstract illustration of financial charts and graphs on a dark background, representing data and financial insights.",
       "imageUrl": "https://i.ibb.co/4xHZStz/Chat-GPT-Image-Dec-24-2025-04-47-24-PM.png",
       "imageHint": "finance data"
+    },
+    {
+      "id": "feature-ai-advice",
+      "description": "Abstract image representing AI and intelligence.",
+      "imageUrl": "https://images.unsplash.com/photo-1745674684585-3cdfccaf1814?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxhaSUyMGludGVsbGlnZW5jZXxlbnwwfHx8fDE3NjY3NzE3Mzd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "ai intelligence"
+    },
+    {
+      "id": "feature-spending-analysis",
+      "description": "Image of charts and graphs for spending analysis.",
+      "imageUrl": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxjaGFydHMlMjBncmFwaHN8ZW58MHx8fHwxNzY2Njc2MTAwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "charts graphs"
+    },
+    {
+      "id": "feature-budgeting",
+      "description": "Image representing budgeting, like a pie chart.",
+      "imageUrl": "https://images.unsplash.com/photo-1594981449006-3bb015dd305a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxidWRnZXQlMjBwaWUtY2hhcnR8ZW58MHx8fHwxNzY2NzcxNzM4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "budget pie-chart"
+    },
+    {
+      "id": "feature-goal-tracking",
+      "description": "Image of a target or mountain peak for goal tracking.",
+      "imageUrl": "https://images.unsplash.com/photo-1645999140911-fb4e70baf2b1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHx0YXJnZXQlMjBnb2Fsc3xlbnwwfHx8fDE3NjY3NzE3Mzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "target goals"
+    },
+    {
+      "id": "feature-dashboard",
+      "description": "Image of a modern digital dashboard.",
+      "imageUrl": "https://images.unsplash.com/photo-1659018966825-43297e655ccf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxkYXNoYm9hcmQlMjBpbnRlcmZhY2V8ZW58MHx8fHwxNzY2NjUyNTA0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "dashboard interface"
+    },
+    {
+      "id": "feature-security",
+      "description": "Image of a lock or shield for security.",
+      "imageUrl": "https://images.unsplash.com/photo-1763370356177-ea27caf4d485?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzZWN1cml0eSUyMGxvY2t8ZW58MHx8fHwxNzY2NzUyMzI3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "security lock"
     }
   ]
 }
