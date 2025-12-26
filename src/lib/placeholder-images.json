@@ -39,7 +39,7 @@
     {
       "id": "feature-security",
       "description": "Image of a lock or shield for security.",
-      "imageUrl": "https://images.unsplash.com/photo-1763370356177-ea27caf4d485?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzZWN1cml0eSUyMGxvY2t8ZW58MHx8fHwxNzY2NzUyMzI3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://res.cloudinary.com/suv4o/image/upload/q_auto,f_auto,w_750,e_sharpen:100/v1626001455/blog/firebase-authentication-token-verification-with-a-custom-backend-server",
       "imageHint": "security lock"
     }
   ]
