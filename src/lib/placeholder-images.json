@@ -1,10 +1,22 @@
 {
   "placeholderImages": [
     {
-      "id": "hero-landing",
+      "id": "hero-landing-1",
       "description": "An abstract illustration of financial charts and graphs on a dark background, representing data and financial insights.",
       "imageUrl": "https://i.ibb.co/4xHZStz/Chat-GPT-Image-Dec-24-2025-04-47-24-PM.png",
       "imageHint": "finance data"
+    },
+    {
+      "id": "hero-landing-2",
+      "description": "A businessman analyzing financial data on a tablet, with digital charts overlaid.",
+      "imageUrl": "https://i.ibb.co/BVt7v1mR/businessman-analyzing-financial-data-with-tablet.jpg",
+      "imageHint": "business finance"
+    },
+    {
+      "id": "hero-landing-3",
+      "description": "An abstract digital art piece with flowing lines and glowing particles.",
+      "imageUrl": "https://i.ibb.co/xq3vM5qT/Gemini-Generated-Image-dmilsndmilsndmil.png",
+      "imageHint": "digital abstract"
     },
     {
       "id": "feature-ai-advice",

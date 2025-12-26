@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle } from 'lucide-react';
 import { placeholderImages } from '@/lib/placeholder-images';
+import HeroSlider from '@/components/home/hero-slider';
 
 export default function Home() {
-  const heroImage = placeholderImages.find(p => p.id === 'hero-landing');
+  const heroImages = placeholderImages.filter(p => p.id.startsWith('hero-landing'));
 
   const features = [
     {
@@ -35,11 +36,6 @@ export default function Home() {
       imageId: 'feature-security'
     },
   ];
-
-  if (!heroImage) {
-    // Handle the case where the image is not found
-    return <div>Error: Hero image not found.</div>;
-  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
@@ -84,17 +80,8 @@ export default function Home() {
                 </div>
               </div>
               
-              <div className="relative group">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-secondary rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-                <Image
-                  src={heroImage.imageUrl}
-                  alt={heroImage.description}
-                  width={650}
-                  height={433}
-                  data-ai-hint={heroImage.imageHint}
-                  className="relative mx-auto aspect-[3/2] overflow-hidden rounded-xl object-cover sm:w-full"
-                />
-              </div>
+              <HeroSlider images={heroImages} />
+
             </div>
           </div>
         </section>
