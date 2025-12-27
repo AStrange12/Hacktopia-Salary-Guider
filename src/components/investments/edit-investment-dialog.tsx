@@ -38,7 +38,7 @@ type EditInvestmentDialogProps = {
 
 const investmentSchema = z.object({
   name: z.string().min(1, "Investment name is required."),
-  type: z.string().min(1, "Investment type is required."),
+  type: z.enum(["Stock", "Crypto", "Fixed Deposit", "Mutual Fund", "Other"]),
   purchaseDate: z.string().refine((date) => !isNaN(Date.parse(date)), {
     message: "Valid date is required",
   }),
