@@ -37,7 +37,7 @@ type AddInvestmentDialogProps = {
 
 const investmentSchema = z.object({
   name: z.string().min(1, "Investment name is required."),
-  type: z.string().min(1, "Investment type is required."),
+  type: z.enum(["Stock", "Crypto", "Fixed Deposit", "Mutual Fund", "Other"]),
   purchaseDate: z.string().refine((date) => !isNaN(Date.parse(date)), {
     message: "Valid date is required",
   }),
@@ -59,7 +59,7 @@ export default function AddInvestmentDialog({ onInvestmentAdded }: AddInvestment
     resolver: zodResolver(investmentSchema),
     defaultValues: {
       name: "",
-      type: "",
+      type: undefined,
       purchaseDate: new Date().toISOString().split("T")[0],
       quantity: undefined,
       purchasePrice: undefined,
