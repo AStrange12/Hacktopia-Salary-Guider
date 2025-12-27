@@ -8,9 +8,10 @@ import {
   getUser,
   getExpenses,
   getSavingsGoals,
+  getInvestments,
 } from '@/app/actions';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { DollarSign, Receipt } from 'lucide-react';
+import { DollarSign, Receipt, Trophy } from 'lucide-react';
 import SpendingSplitCard from '@/components/dashboard/spending-split-card';
 import FinancialHealthCard from '@/components/dashboard/financial-health-card';
 import PersonalizedAdviceCard from '@/components/dashboard/personalized-advice-card';
@@ -19,7 +20,8 @@ import SavingsGoals from '@/components/dashboard/savings-goals';
 import AddExpenseDialog from '@/components/dashboard/add-expense-dialog';
 import AddGoalDialog from '@/components/dashboard/add-goal-dialog';
 import MonthEndRiskCard from '@/components/dashboard/month-end-risk-card';
-import type { UserProfile, Expense, SavingsGoal } from '@/lib/types';
+import type { UserProfile, Expense, SavingsGoal, Investment } from '@/lib/types';
+import AddInvestmentDialog from '@/components/investments/add-investment-dialog';
 
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
@@ -69,6 +71,7 @@ export default function DashboardPage() {
   const wantsTotal = monthlyExpenses.filter(e => e.type === 'want').reduce((acc, exp) => acc + exp.amount, 0);
   const income = userProfile.salary || 0;
   const savingsTotal = income - totalSpent > 0 ? income - totalSpent : 0;
+  const bonus = userProfile.bonus;
 
   return (
     <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -88,6 +91,14 @@ export default function DashboardPage() {
           <CardContent>
             <div className="text-2xl font-bold">₹{income.toLocaleString('en-IN')}</div>
             <p className="text-xs text-muted-foreground">Your monthly salary</p>
+             {bonus && (
+                <div className="mt-2 flex items-center text-xs">
+                    <Trophy className="h-3 w-3 mr-1 text-yellow-500" />
+                    <span className="text-muted-foreground">
+                        + ₹{bonus.amount.toLocaleString('en-IN')} ({bonus.type})
+                    </span>
+                </div>
+            )}
           </CardContent>
         </Card>
         <Card>

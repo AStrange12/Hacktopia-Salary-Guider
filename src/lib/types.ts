@@ -14,6 +14,10 @@ export type UserProfile = {
     wants: number;
     savings: number;
   };
+  bonus?: {
+    amount: number;
+    type: 'Promotion Hike' | 'Performance Bonus' | 'Joining Bonus' | 'Other';
+  };
 };
 
 export type Expense = {
@@ -27,7 +31,7 @@ export type Expense = {
 };
 
 export type SavingsGoal = {
-  id: string;
+  id:string;
   userId: string;
   name: string;
   category: 'Emergency' | 'Gold' | 'Investments' | 'Other';

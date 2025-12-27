@@ -203,6 +203,3 @@ export async function deleteInvestment(firestore: Firestore, userId: string, inv
     const investmentRef = doc(firestore, "users", userId, "investments", investmentId);
     return deleteDoc(investmentRef);
 }
-
-
-
