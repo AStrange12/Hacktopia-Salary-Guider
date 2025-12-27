@@ -204,3 +204,4 @@ export async function deleteInvestment(firestore: Firestore, userId: string, inv
     return deleteDoc(investmentRef);
 }
 
+
