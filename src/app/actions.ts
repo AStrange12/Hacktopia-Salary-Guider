@@ -15,7 +15,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { User } from "firebase/auth";
-import { UserProfile, Expense, SavingsGoal } from "@/lib/types";
+import { UserProfile, Expense, SavingsGoal, Investment } from "@/lib/types";
 
 export async function createUserProfile(firestore: Firestore, user: User) {
     const userRef = doc(firestore, "users", user.uid);
@@ -156,4 +156,50 @@ export async function updateUserSettings(firestore: Firestore, userId: string, s
     return setDoc(userRef, settingsData, { merge: true });
 }
 
+export async function getInvestments(firestore: Firestore, userId: string): Promise<Investment[]> {
+  try {
+    if (!userId) return [];
+
+    const investmentsRef = collection(firestore, "users", userId, "investments");
+    const querySnapshot = await getDocs(investmentsRef);
+
+    return querySnapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() } as Investment)
+    ).sort((a, b) => b.purchaseDate.toMillis() - a.purchaseDate.toMillis());
+  } catch (error) {
+    console.error("Error getting investments:", error);
+    return [];
+  }
+}
+
+export async function addInvestment(firestore: Firestore, userId: string, investmentData: Omit<Investment, 'id' | 'userId' | 'purchaseDate'> & { purchaseDate: Date }) {
+    if (!userId) throw new Error("User not authenticated");
+
+    const newInvestmentData = {
+        ...investmentData,
+        purchaseDate: Timestamp.fromDate(investmentData.purchaseDate),
+        userId: userId,
+    };
+
+    const investmentsRef = collection(firestore, "users", userId, "investments");
+    return addDoc(investmentsRef, newInvestmentData);
+}
+
+export async function updateInvestment(firestore: Firestore, userId: string, investmentId: string, investmentData: Partial<Omit<Investment, 'id' | 'userId'>> & { purchaseDate?: Date }) {
+    if (!userId) throw new Error("User not authenticated");
+
+    const investmentRef = doc(firestore, "users", userId, "investments", investmentId);
+    const updateData: any = { ...investmentData };
+
+    if (investmentData.purchaseDate) {
+        updateData.purchaseDate = Timestamp.fromDate(investmentData.purchaseDate);
+    }
     
+    return updateDoc(investmentRef, updateData);
+}
+
+export async function deleteInvestment(firestore: Firestore, userId: string, investmentId: string) {
+    if (!userId) throw new Error("User not authenticated");
+    const investmentRef = doc(firestore, "users", userId, "investments", investmentId);
+    return deleteDoc(investmentRef);
+}

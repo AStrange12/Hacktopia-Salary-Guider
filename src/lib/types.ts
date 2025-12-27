@@ -35,3 +35,14 @@ export type SavingsGoal = {
   currentAmount: number;
   deadline: Timestamp;
 };
+
+export type Investment = {
+  id: string;
+  userId: string;
+  name: string;
+  type: 'Stock' | 'Crypto' | 'Fixed Deposit' | 'Mutual Fund' | 'Other';
+  purchaseDate: Timestamp;
+  quantity?: number;
+  purchasePrice: number;
+  currentValue: number;
+};

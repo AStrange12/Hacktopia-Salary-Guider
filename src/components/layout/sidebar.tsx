@@ -12,12 +12,14 @@ import {
   Goal,
   Settings,
   Lightbulb,
+  Landmark,
 } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/expenses", label: "Expenses", icon: Receipt },
   { href: "/goals", label: "Goals", icon: Goal },
+  { href: "/investments", label: "Investments", icon: Landmark },
   { href: "/advice", label: "AI Advice", icon: Lightbulb },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
