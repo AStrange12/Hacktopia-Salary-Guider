@@ -115,7 +115,7 @@ export async function getSavingsGoals(firestore: Firestore, userId: string): Pro
   }
 }
 
-export async function addSavingsGoal(firestore: Firestore, userId: string, goalData: Omit<SavingsGoal, 'id' | 'userId' | 'currentAmount'> & { deadline: Date }) {
+export async function addSavingsGoal(firestore: Firestore, userId: string, goalData: Omit<SavingsGoal, 'id' | 'userId' | 'currentAmount' | 'deadline'> & { deadline: Date }) {
     if (!userId) throw new Error("User not authenticated");
 
     const newGoalData = {
@@ -203,3 +203,4 @@ export async function deleteInvestment(firestore: Firestore, userId: string, inv
     const investmentRef = doc(firestore, "users", userId, "investments", investmentId);
     return deleteDoc(investmentRef);
 }
+
