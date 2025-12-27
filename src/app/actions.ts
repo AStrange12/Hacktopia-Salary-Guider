@@ -185,7 +185,7 @@ export async function addInvestment(firestore: Firestore, userId: string, invest
     return addDoc(investmentsRef, newInvestmentData);
 }
 
-export async function updateInvestment(firestore: Firestore, userId: string, investmentId: string, investmentData: Partial<Omit<Investment, 'id' | 'userId'>> & { purchaseDate?: Date }) {
+export async function updateInvestment(firestore: Firestore, userId: string, investmentId: string, investmentData: Partial<Omit<Investment, 'id' | 'userId' | 'purchaseDate'>> & { purchaseDate?: Date }) {
     if (!userId) throw new Error("User not authenticated");
 
     const investmentRef = doc(firestore, "users", userId, "investments", investmentId);
@@ -203,5 +203,6 @@ export async function deleteInvestment(firestore: Firestore, userId: string, inv
     const investmentRef = doc(firestore, "users", userId, "investments", investmentId);
     return deleteDoc(investmentRef);
 }
+
 
 
