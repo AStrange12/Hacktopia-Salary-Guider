@@ -121,7 +121,7 @@ export async function addSavingsGoal(firestore: Firestore, userId: string, goalD
     const newGoalData = {
         ...goalData,
         deadline: Timestamp.fromDate(goalData.deadline),
-        currentAmount: goalData.currentAmount || 0,
+        currentAmount: 0,
         userId: userId,
     };
 
@@ -129,7 +129,7 @@ export async function addSavingsGoal(firestore: Firestore, userId: string, goalD
     return addDoc(goalsRef, newGoalData);
 }
 
-export async function updateSavingsGoal(firestore: Firestore, userId: string, goalId: string, goalData: Partial<Omit<SavingsGoal, 'id' | 'userId' | 'currentAmount'>> & { deadline?: Date }) {
+export async function updateSavingsGoal(firestore: Firestore, userId: string, goalId: string, goalData: Partial<Omit<SavingsGoal, 'id' | 'userId'>> & { deadline?: Date }) {
     if (!userId) throw new Error("User not authenticated");
 
     const goalRef = doc(firestore, "users", userId, "savingsGoals", goalId);
