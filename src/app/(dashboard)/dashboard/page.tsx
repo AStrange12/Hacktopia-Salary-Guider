@@ -18,12 +18,8 @@ import RecentExpenses from '@/components/dashboard/recent-expenses';
 import SavingsGoals from '@/components/dashboard/savings-goals';
 import AddExpenseDialog from '@/components/dashboard/add-expense-dialog';
 import AddGoalDialog from '@/components/dashboard/add-goal-dialog';
-import { analyzeSpendingBehavior } from '@/ai/flows/analyze-spending-behavior';
-import { summarizeMonthlySpending } from '@/ai/flows/summarize-monthly-spending';
 import MonthEndRiskCard from '@/components/dashboard/month-end-risk-card';
 import type { UserProfile, Expense, SavingsGoal } from '@/lib/types';
-import type { SummarizeMonthlySpendingOutput } from '@/ai/flows/summarize-monthly-spending';
-import type { AnalyzeSpendingBehaviorOutput } from '@/ai/flows/analyze-spending-behavior';
 
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
@@ -32,8 +28,6 @@ export default function DashboardPage() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([]);
-  const [spendingAnalysis, setSpendingAnalysis] = useState<AnalyzeSpendingBehaviorOutput | null>(null);
-  const [spendingSummary, setSpendingSummary] = useState<SummarizeMonthlySpendingOutput | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -56,57 +50,6 @@ export default function DashboardPage() {
     fetchData();
   }, [fetchData]);
 
-  useEffect(() => {
-    const runAnalysis = async () => {
-        if (!userProfile || expenses.length === 0) {
-            setSpendingAnalysis(null);
-            setSpendingSummary(null);
-            return;
-        };
-
-        try {
-            const analysis = await analyzeSpendingBehavior({
-                expenses: expenses.map(e => ({...e, date: e.date.toDate().toISOString()})),
-                income: userProfile.salary || 0,
-            });
-            setSpendingAnalysis(analysis);
-        } catch (e) {
-            console.error("Failed to analyze spending behavior", e);
-            setSpendingAnalysis(null);
-        }
-
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const monthlyExpenses = expenses.filter(e => e.date.toDate() >= startOfMonth);
-
-        const needsTotal = monthlyExpenses.filter(e => e.type === 'need').reduce((acc, exp) => acc + exp.amount, 0);
-        const wantsTotal = monthlyExpenses.filter(e => e.type === 'want').reduce((acc, exp) => acc + exp.amount, 0);
-        const totalSpent = needsTotal + wantsTotal;
-        const income = userProfile.salary || 0;
-        const savingsTotal = income > totalSpent ? income - totalSpent : 0;
-        
-        if (needsTotal > 0 || wantsTotal > 0) {
-            try {
-              const summary = await summarizeMonthlySpending({
-                  needs: needsTotal,
-                  wants: wantsTotal,
-                  savings: savingsTotal,
-                  totalIncome: income
-              });
-              setSpendingSummary(summary);
-            } catch (e) {
-              console.error("Failed to summarize monthly spending", e);
-              setSpendingSummary(null);
-            }
-        } else {
-          setSpendingSummary(null);
-        }
-    };
-    
-    if (!loading) {
-        runAnalysis();
-    }
-  }, [userProfile, expenses, loading]);
 
   if (loading || isUserLoading) {
     return (
@@ -159,7 +102,7 @@ export default function DashboardPage() {
             </p>
           </CardContent>
         </Card>
-        <FinancialHealthCard score={spendingAnalysis?.financialHealthScore} />
+        <FinancialHealthCard expenses={expenses} userProfile={userProfile} />
         <MonthEndRiskCard income={income} totalSpent={totalSpent} budget={userProfile.budget} />
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
@@ -177,7 +120,7 @@ export default function DashboardPage() {
                 <CardTitle className="text-sm font-medium">AI Advisor</CardTitle>
             </CardHeader>
             <CardContent>
-                 <PersonalizedAdviceCard initialSummary={spendingSummary} />
+                 <PersonalizedAdviceCard userProfile={userProfile} expenses={expenses} />
             </CardContent>
         </Card>
         <div className="lg:col-span-3">

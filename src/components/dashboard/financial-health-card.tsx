@@ -1,13 +1,48 @@
+
 "use client";
 
+import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TrendingUp, Sparkles, AlertCircle } from "lucide-react";
+import { analyzeSpendingBehavior, AnalyzeSpendingBehaviorOutput } from "@/ai/flows/analyze-spending-behavior";
+import type { UserProfile, Expense } from "@/lib/types";
 
 type FinancialHealthCardProps = {
-  score: number | undefined | null;
+  userProfile: UserProfile;
+  expenses: Expense[];
 };
 
-export default function FinancialHealthCard({ score }: FinancialHealthCardProps) {
+export default function FinancialHealthCard({ userProfile, expenses }: FinancialHealthCardProps) {
+  const [analysis, setAnalysis] = useState<AnalyzeSpendingBehaviorOutput | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleAnalyze = async () => {
+    if (!userProfile || expenses.length === 0) {
+      setError("Not enough data to calculate a score. Please add some expenses first.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    setAnalysis(null);
+
+    try {
+      const result = await analyzeSpendingBehavior({
+        expenses: expenses.map(e => ({ ...e, date: e.date.toDate().toISOString() })),
+        income: userProfile.salary || 0,
+      });
+      setAnalysis(result);
+    } catch (e) {
+      console.error("Financial health analysis failed:", e);
+      setError("Could not analyze your financial health at this time.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const score = analysis?.financialHealthScore;
   const safeScore = score || 0;
   const circumference = 2 * Math.PI * 45; // 2 * pi * radius
   const strokeDashoffset = circumference - (safeScore / 100) * circumference;
@@ -16,7 +51,7 @@ export default function FinancialHealthCard({ score }: FinancialHealthCardProps)
     if (s < 40) return "hsl(var(--destructive))";
     if (s < 70) return "hsl(var(--chart-4))";
     return "hsl(var(--chart-2))";
-  }
+  };
 
   return (
     <Card>
@@ -25,15 +60,27 @@ export default function FinancialHealthCard({ score }: FinancialHealthCardProps)
         <TrendingUp className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent className="flex flex-col items-center justify-center">
-        {score === undefined || score === null ? (
+        {isLoading ? (
           <div className="text-muted-foreground text-center py-8">
-            <p>Not enough data to calculate score.</p>
-            <p className="text-xs">Add more expenses to see your score.</p>
+            <div className="h-8 w-8 mx-auto animate-spin rounded-full border-2 border-solid border-primary border-t-transparent mb-2"></div>
+            <p className="text-sm">Analyzing...</p>
+          </div>
+        ) : error ? (
+           <div className="text-destructive text-center py-8 text-sm flex flex-col items-center gap-2">
+             <AlertCircle className="h-6 w-6" />
+             <p>{error}</p>
+          </div>
+        ) : score === undefined || score === null ? (
+          <div className="text-muted-foreground text-center py-4 flex flex-col items-center gap-4">
+            <p className="text-sm">Click to check your financial health score.</p>
+            <Button onClick={handleAnalyze}>
+              <Sparkles className="mr-2 h-4 w-4" />
+              Analyze
+            </Button>
           </div>
         ) : (
           <div className="relative h-32 w-32">
             <svg className="h-full w-full" viewBox="0 0 100 100">
-              {/* Background circle */}
               <circle
                 className="stroke-current text-secondary"
                 strokeWidth="10"
@@ -42,7 +89,6 @@ export default function FinancialHealthCard({ score }: FinancialHealthCardProps)
                 r="45"
                 fill="transparent"
               ></circle>
-              {/* Progress circle */}
               <circle
                 className="stroke-current transition-all duration-1000 ease-out"
                 strokeWidth="10"
@@ -56,7 +102,6 @@ export default function FinancialHealthCard({ score }: FinancialHealthCardProps)
                 transform="rotate(-90 50 50)"
                 style={{ color: getColor(safeScore) }}
               ></circle>
-              {/* Text */}
               <text
                 x="50"
                 y="50"
