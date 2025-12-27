@@ -129,7 +129,7 @@ export async function addSavingsGoal(firestore: Firestore, userId: string, goalD
     return addDoc(goalsRef, newGoalData);
 }
 
-export async function updateSavingsGoal(firestore: Firestore, userId: string, goalId: string, goalData: Partial<Omit<SavingsGoal, 'id' | 'userId'>> & { deadline?: Date }) {
+export async function updateSavingsGoal(firestore: Firestore, userId: string, goalId: string, goalData: Partial<Omit<SavingsGoal, 'id' | 'userId' | 'deadline'>> & { deadline?: Date }) {
     if (!userId) throw new Error("User not authenticated");
 
     const goalRef = doc(firestore, "users", userId, "savingsGoals", goalId);
