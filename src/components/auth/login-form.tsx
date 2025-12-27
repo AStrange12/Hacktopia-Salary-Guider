@@ -117,7 +117,7 @@ export function LoginForm({ isRegister = false }: LoginFormProps) {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} disabled={loading}/>
+                  <Input type="password" placeholder="Enter password" {...field} disabled={loading}/>
                 </FormControl>
                 <FormMessage />
               </FormItem>
